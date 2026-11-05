@@ -5,7 +5,7 @@ import {
   createWalletClient,
   http,
   parseEther,
-  formatEther,
+  defineChain,
 } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { COVER_ABI } from "../../lib/botchain/abi";
@@ -14,6 +14,16 @@ import { join } from "node:path";
 
 const ANVIL_PORT = 8666;
 const RPC_URL = `http://127.0.0.1:${ANVIL_PORT}`;
+
+const localChain = defineChain({
+  id: 31337,
+  name: "Anvil Local",
+  nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
+  rpcUrls: {
+    default: { http: [RPC_URL] },
+    public: { http: [RPC_URL] },
+  },
+});
 
 // Anvil standard default keys
 const CREATOR_KEY = "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80";
@@ -31,26 +41,31 @@ describe("Cover Integration Lifecycle (Anvil)", () => {
   const memberCAccount = privateKeyToAccount(MEMBER_C_KEY);
 
   const publicClient = createPublicClient({
+    chain: localChain,
     transport: http(RPC_URL),
   });
 
   const creatorWallet = createWalletClient({
     account: creatorAccount,
+    chain: localChain,
     transport: http(RPC_URL),
   });
 
   const memberAWallet = createWalletClient({
     account: memberAAccount,
+    chain: localChain,
     transport: http(RPC_URL),
   });
 
   const memberBWallet = createWalletClient({
     account: memberBAccount,
+    chain: localChain,
     transport: http(RPC_URL),
   });
 
   const memberCWallet = createWalletClient({
     account: memberCAccount,
+    chain: localChain,
     transport: http(RPC_URL),
   });
 

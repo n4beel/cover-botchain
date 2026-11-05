@@ -6,6 +6,7 @@ export interface CoverButtonProps extends ButtonHTMLAttributes<HTMLButtonElement
   variant?: "primary" | "secondary" | "accent" | "danger" | "ghost";
   size?: "sm" | "md" | "lg";
   rounded?: "full" | "subtle";
+  loading?: boolean;
 }
 
 const CoverButton = forwardRef<HTMLButtonElement, CoverButtonProps>(
@@ -16,6 +17,7 @@ const CoverButton = forwardRef<HTMLButtonElement, CoverButtonProps>(
       size = "md",
       rounded = "subtle",
       disabled,
+      loading = false,
       className = "",
       ...props
     },
@@ -45,11 +47,37 @@ const CoverButton = forwardRef<HTMLButtonElement, CoverButtonProps>(
     return (
       <button
         ref={ref}
-        disabled={disabled}
+        disabled={disabled || loading}
         className={`inline-flex items-center justify-center font-sans transition-all duration-150 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed select-none ${sizeClasses} ${radiusClass} ${variantClasses} ${className}`}
         {...props}
       >
-        {children}
+        {loading ? (
+          <span className="inline-flex items-center gap-2">
+            <svg
+              className="animate-spin h-3.5 w-3.5"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                className="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="4"
+              />
+              <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8v8H4z"
+              />
+            </svg>
+            <span>{children}</span>
+          </span>
+        ) : (
+          children
+        )}
       </button>
     );
   }
