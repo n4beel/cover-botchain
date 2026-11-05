@@ -1,55 +1,60 @@
 "use client";
 
-import { ButtonHTMLAttributes, CSSProperties, forwardRef } from "react";
+import { ButtonHTMLAttributes, forwardRef } from "react";
 
-type Variant = "primary" | "ghost" | "danger";
-type Size = "sm" | "md";
-
-interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: Variant;
-  size?: Size;
-  loading?: boolean;
+export interface CoverButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+  variant?: "primary" | "secondary" | "accent" | "danger" | "ghost";
+  size?: "sm" | "md" | "lg";
+  rounded?: "full" | "subtle";
 }
 
-const variantInlineStyles: Record<Variant, CSSProperties> = {
-  primary: { background: "var(--accent)", color: "var(--bg-base)" },
-  ghost: { background: "transparent", border: "1px solid var(--border-default)", color: "var(--text-secondary)" },
-  danger: { background: "transparent", border: "1px solid var(--danger)", color: "var(--danger)" },
-};
+const CoverButton = forwardRef<HTMLButtonElement, CoverButtonProps>(
+  (
+    {
+      children,
+      variant = "primary",
+      size = "md",
+      rounded = "subtle",
+      disabled,
+      className = "",
+      ...props
+    },
+    ref
+  ) => {
+    const sizeClasses = {
+      sm: "px-3 py-1.5 text-xs font-medium tracking-wide",
+      md: "px-4 py-2 text-sm font-semibold tracking-wide",
+      lg: "px-6 py-2.5 text-base font-bold tracking-wide",
+    }[size];
 
-const sizeStyles: Record<Size, string> = {
-  sm: "px-3 py-1.5 text-[11px]",
-  md: "px-5 py-2.5 text-[13px]",
-};
+    const radiusClass = rounded === "full" ? "rounded-full" : "rounded-sm";
 
-const Button = forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ variant = "primary", size = "md", loading, disabled, children, className = "", style, ...props }, ref) => {
+    const variantClasses = {
+      primary:
+        "bg-[var(--accent)] text-[var(--accent-ink)] hover:opacity-90 active:scale-[0.99] border border-transparent shadow-sm",
+      secondary:
+        "bg-[var(--bg-surface)] text-[var(--text-primary)] border border-[var(--border-default)] hover:bg-[var(--bg-elevated)] active:scale-[0.99]",
+      accent:
+        "bg-[var(--border-strong)] text-[var(--accent-ink)] hover:opacity-95 active:scale-[0.99] border border-transparent",
+      danger:
+        "bg-[var(--danger)] text-white hover:opacity-90 active:scale-[0.99] border border-transparent",
+      ghost:
+        "bg-transparent text-[var(--text-primary)] hover:bg-[var(--bg-elevated)] border border-transparent",
+    }[variant];
+
     return (
       <button
         ref={ref}
-        disabled={disabled || loading}
-        className={[
-          "inline-flex items-center justify-center gap-2",
-          "font-medium tracking-[0.02em] uppercase transition-opacity",
-          "cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed",
-          sizeStyles[size],
-          className,
-        ].join(" ")}
-        style={{ borderRadius: "2px", ...variantInlineStyles[variant], ...style }}
+        disabled={disabled}
+        className={`inline-flex items-center justify-center font-sans transition-all duration-150 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed select-none ${sizeClasses} ${radiusClass} ${variantClasses} ${className}`}
         {...props}
       >
-        {loading ? (
-          <>
-            <span className="w-3 h-3 border border-current border-t-transparent rounded-full animate-spin" />
-            {children}
-          </>
-        ) : (
-          children
-        )}
+        {children}
       </button>
     );
-  },
+  }
 );
 
-Button.displayName = "Button";
-export default Button;
+CoverButton.displayName = "CoverButton";
+
+export default CoverButton;
