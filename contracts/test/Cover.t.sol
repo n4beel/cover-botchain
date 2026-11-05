@@ -463,11 +463,48 @@ contract CoverTest is Test {
     assertEq(cover.MAX_CLAIM_BPS(), 5000);
     assertEq(cover.MIN_ELIGIBLE(), 2);
 
-    // 2. Pagination on latest()
-    uint256 pid1 = _createPool();
+    // Boundary create fee = 1000 ether
+    vm.deal(creator, 5000 ether);
+    vm.prank(creator);
+    cover.create{value: 1000 ether}("Max Fee Pot", 1000 ether, 1 hours, 14 days, 5000, 30 days);
+
+    // Boundary create voteSecs = 14 days
+    vm.prank(creator);
+    vm.expectRevert(Cover.BadParams.selector);
+    cover.create{value: 1 ether}("Over Vote Pot", 1 ether, 1 hours, 14 days + 1, 5000, 30 days);
+
+    // 2. Exact amount == maxAllowed filing
+    uint256 pid = _setupPoolWithMembers();
+    vm.warp(block.timestamp + WAIT_SECS + 1);
+    uint128 maxAllowed = 2 ether;
+    vm.prank(memberA);
+    cover.file(pid, maxAllowed, "Exact max claim"); // must succeed
+
+    // 3. Exact voting deadline: at block.timestamp == closesAt, voting should revert VotingClosed
+    Cover.Claim memory c = cover.claimOf(pid, 1);
+    vm.warp(c.closesAt);
+    vm.prank(creator);
+    vm.expectRevert(Cover.VotingClosed.selector);
+    cover.vote(pid, true);
+
+    // 4. Exact settle at block.timestamp == closesAt must succeed
+    cover.settle(pid);
+
+    // 5. Exact pool endsAt boundary for joining: at block.timestamp == endsAt, join reverts Ended
+    Cover.Pool memory p = cover.poolOf(pid);
+    vm.warp(p.endsAt);
+    vm.deal(lateMember, 10 ether);
+    vm.prank(lateMember);
+    vm.expectRevert(Cover.Ended.selector);
+    cover.join{value: FEE}(pid);
+
+    // 6. At block.timestamp == endsAt, closeOut must succeed
+    cover.closeOut(pid);
+
+    // 7. Pagination ordering on latest()
     (uint256[] memory ids, Cover.Pool[] memory list) = cover.latest(0, 10);
-    assertGt(ids.length, 0);
+    assertGt(ids.length, 1);
     assertEq(list.length, ids.length);
-    assertEq(ids[0], pid1);
+    assertGt(ids[0], ids[1]); // descending order
   }
 }
